@@ -20,7 +20,7 @@ namespace Ghost.Task
 
 	public abstract class Entity : IStateMachineTraits<TaskState>
 	{
-		private Driver driver;
+		private Driver driver = null;
 		private StateMachine<TaskState, TaskOperation> stateMachine = new StateMachine<TaskState, TaskOperation>();
 
 		public TaskState currentState
@@ -31,11 +31,24 @@ namespace Ghost.Task
 			}
 		}
 
-		internal Entity(Driver d)
+		internal bool inited
+		{
+			get
+			{
+				return null != driver;
+			}
+		}
+
+		internal bool Init(Driver d)
 		{
 			#if DEBUG
 			Debug.Assert(null != d);
 			#endif // DEBUG
+
+			if (inited)
+			{
+				return driver == d;
+			}
 
 			driver = d;
 			stateMachine.traits = this;
@@ -77,6 +90,7 @@ namespace Ghost.Task
 			#endregion running
 
 			stateMachine.TrySwitchState(TaskState.Idle);
+			return true;
 		}
 
 		public bool Operate(TaskOperation opt, object param = null)
