@@ -20,7 +20,7 @@ namespace Ghost.Task
 	{
 		public DriverMode mode = DriverMode.Parallel;
 
-		private Driver driver = null;
+		internal Driver driver{get;private set;}
 
 		protected void UpdateDriver(DriverUpdateParams param)
 		{

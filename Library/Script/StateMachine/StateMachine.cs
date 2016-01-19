@@ -15,24 +15,24 @@ namespace Ghost
 	{
 		public IStateMachineTraits<_State> traits = null;
 
-		private Dictionary<_State, Dictionary<_Operation, Action>> states = new Dictionary<_State, Dictionary<_Operation, Action>>();
+		private Dictionary<_State, Dictionary<_Operation, Predicate<object>>> states = new Dictionary<_State, Dictionary<_Operation, Predicate<object>>>();
 
-		private Dictionary<_Operation, Action> currentOpts = null;
+		private Dictionary<_Operation, Predicate<object>> currentOpts = null;
 		private _State currentState_ = default(_State);
-		private _State currentState
+		public _State currentState
 		{
 			get
 			{
 				return currentState_;
 			}
-			set
+			private set
 			{
 				currentState_ = value;
 				currentOpts = GetOperations(value);
 			}
 		}
 
-		public void Register(_State state, Dictionary<_Operation, Action> opts)
+		public void Register(_State state, Dictionary<_Operation, Predicate<object>> opts)
 		{
 			#if DEBUG
 			Debug.Assert(null != opts && !states.ContainsKey(state));
@@ -40,14 +40,24 @@ namespace Ghost
 			states.Add(state, opts);
 		}
 
+		public Dictionary<_Operation, Predicate<object>> Register(_State state)
+		{
+			#if DEBUG
+			Debug.Assert(!states.ContainsKey(state));
+			#endif // DEBUG
+			var opts = new Dictionary<_Operation, Predicate<object>>();
+			states.Add(state, opts);
+			return opts;
+		}
+
 		public void Unregister(_State state)
 		{
 			states.Remove(state);
 		}
 
-		public Dictionary<_Operation, Action> GetOperations(_State state)
+		public Dictionary<_Operation, Predicate<object>> GetOperations(_State state)
 		{
-			Dictionary<_Operation, Action> s;
+			Dictionary<_Operation, Predicate<object>> s;
 			if (!states.TryGetValue(state, out s))
 			{
 				return null;
@@ -55,19 +65,18 @@ namespace Ghost
 			return s;
 		}
 
-		public bool InvokeCurrentState(_Operation opt)
+		public bool InvokeCurrentState(_Operation opt, object param = null)
 		{
 			if (null == currentOpts)
 			{
 				return false;
 			}
-			Action action;
+			Predicate<object> action;
 			if (!currentOpts.TryGetValue(opt, out action))
 			{
 				return false;
 			}
-			action();
-			return true;
+			return action(param);
 		}
 
 		public bool TrySwitchState(_State nextState)
