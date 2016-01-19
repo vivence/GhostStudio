@@ -23,11 +23,11 @@ namespace Ghost.Task
 		private Driver driver;
 		private StateMachine<TaskState, TaskOperation> stateMachine = new StateMachine<TaskState, TaskOperation>();
 
-		public bool running
+		public TaskState currentState
 		{
 			get
 			{
-				return TaskState.Running == stateMachine.currentState;
+				return stateMachine.currentState;
 			}
 		}
 
