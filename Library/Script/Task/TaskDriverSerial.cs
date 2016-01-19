@@ -1,14 +1,15 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 
 namespace Ghost.Task
 {
 	internal class DriverSerial : Driver
 	{
-		protected Queue<System.Predicate<DriverUpdateParams>> tasks = new Queue<System.Predicate<DriverUpdateParams>>();
+		protected Queue<Predicate<DriverUpdateParams>> tasks = new Queue<Predicate<DriverUpdateParams>>();
 
 		#region override
-		protected override void DoPostTask (System.Predicate<DriverUpdateParams> task)
+		protected override void DoPostTask (Predicate<DriverUpdateParams> task)
 		{
 			#if DEBUG
 			Debug.Assert(!tasks.Contains(task));

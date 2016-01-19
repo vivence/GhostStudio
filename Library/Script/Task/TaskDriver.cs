@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 
 namespace Ghost.Task
@@ -52,7 +53,7 @@ namespace Ghost.Task
 
 		protected DriverUpdateParams updateParam = null;
 
-		public void PostTask(System.Predicate<DriverUpdateParams> task)
+		public void PostTask(Predicate<DriverUpdateParams> task)
 		{
 			#if DEBUG
 			Debug.Assert(null != task);
@@ -70,7 +71,7 @@ namespace Ghost.Task
 		}
 
 		#region abstract
-		protected abstract void DoPostTask(System.Predicate<DriverUpdateParams> task);
+		protected abstract void DoPostTask(Predicate<DriverUpdateParams> task);
 		protected abstract void DoUpdate();
 		#endregion abstract
 	}

@@ -1,19 +1,20 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 
 namespace Ghost.Task
 {
 	internal class DriverParallel : Driver
 	{
-		protected List<System.Predicate<DriverUpdateParams>> tasks = new List<System.Predicate<DriverUpdateParams>>();
+		protected List<Predicate<DriverUpdateParams>> tasks = new List<Predicate<DriverUpdateParams>>();
 
-		protected bool TaskUpdateAndRemovePredicate(System.Predicate<DriverUpdateParams> task)
+		protected bool TaskUpdateAndRemovePredicate(Predicate<DriverUpdateParams> task)
 		{
 			return !task(updateParam);
 		}
 
 		#region override
-		protected override void DoPostTask (System.Predicate<DriverUpdateParams> task)
+		protected override void DoPostTask (Predicate<DriverUpdateParams> task)
 		{
 			#if DEBUG
 			Debug.Assert(!tasks.Contains(task));
