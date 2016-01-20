@@ -4,8 +4,8 @@ using System.Collections.Generic;
 
 namespace Ghost.Sample.EditorTool
 {
-	[CustomEditor(typeof(SampleTask)), CanEditMultipleObjects]
-	public class E_SampleTask : Editor
+	[CustomEditor(typeof(SampleTaskTextFileStream)), CanEditMultipleObjects]
+	public class E_SampleTaskTextFileStream : Editor
 	{
 		public override void OnInspectorGUI ()
 		{
@@ -15,31 +15,31 @@ namespace Ghost.Sample.EditorTool
 				return;
 			}
 			EditorGUILayout.Separator();
-			if (GUILayout.Button("Start"))
+			if (GUILayout.Button("SyncReadStart"))
 			{
 				int count = 0;
 				foreach (var t in targets)
 				{
-					var task = t as SampleTask;
-					if (task.StartTask())
+					var task = t as SampleTaskTextFileStream;
+					if (task.StartSyncRead())
 					{
 						++count;
 					}
 				}
-				Debug.LogFormat("Start task count: {0}", count);
+				Debug.LogFormat("Start task(sync read) count: {0}", count);
 			}
-			if (GUILayout.Button("End"))
+			if (GUILayout.Button("SyncReadEnd"))
 			{
 				int count = 0;
 				foreach (var t in targets)
 				{
-					var task = t as SampleTask;
-					if (task.EndTask())
+					var task = t as SampleTaskTextFileStream;
+					if (task.EndSyncReadTask())
 					{
 						++count;
 					}
 				}
-				Debug.LogFormat("End task count: {0}", count);
+				Debug.LogFormat("End task(sync read) count: {0}", count);
 			}
 		}
 	

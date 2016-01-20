@@ -21,6 +21,9 @@ namespace Ghost.Sample
 			{
 				return false;
 			}
+
+			EndTask();
+
 			task = Factory.Create<TaskEntity>(driver);
 			var renderer = GetComponent<Renderer>();
 			if (null != renderer)
@@ -37,7 +40,12 @@ namespace Ghost.Sample
 			{
 				return false;
 			}
-			return task.Operate(TaskOperation.End);
+			if (!task.Operate(TaskOperation.End))
+			{
+				return false;
+			}
+			task = null;
+			return true;
 		}
 
 		#region behaviour
