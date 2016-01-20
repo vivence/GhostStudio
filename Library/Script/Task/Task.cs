@@ -100,7 +100,12 @@ namespace Ghost.Task
 
 		private bool Update(DriverUpdateParams param)
 		{
-			return Operate(TaskOperation.Update, param);
+			if (!Operate(TaskOperation.Update, param))
+			{
+				Operate(TaskOperation.End);
+				return false;
+			}
+			return true;
 		}
 
 		#region abstract

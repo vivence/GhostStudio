@@ -83,7 +83,7 @@ namespace Ghost
 		{
 			if (null != traits)
 			{
-				if (!!traits.AllowSwitchState(currentState, nextState))
+				if (!traits.AllowSwitchState(currentState, nextState))
 				{
 					return false;
 				}
