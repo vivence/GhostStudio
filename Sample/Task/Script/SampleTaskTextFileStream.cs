@@ -15,6 +15,7 @@ namespace Ghost.Sample
 		public TaskDriver driver = null;
 		public TextMesh textMesh = null;
 		public string filePath = null;
+		public int readPartMaxSize = 1024;
 
 		private SyncReadStream syncReadTask = null;
 
@@ -59,6 +60,11 @@ namespace Ghost.Sample
 			syncReadTask.taskParam.stream = stream;
 			syncReadTask.taskParam.buffer = new byte[stream.Length];
 			syncReadTask.taskParam.length = (int)stream.Length;
+			if (0 >= readPartMaxSize)
+			{
+				readPartMaxSize = 1;
+			}
+			syncReadTask.partLength = readPartMaxSize;
 
 			if (!syncReadTask.Operate(TaskOperation.Start))
 			{
@@ -128,8 +134,11 @@ namespace Ghost.Sample
 					}
 					else
 					{
-						textMesh.text = string.Format("Class: {0}\nRead: Failed", 
-							task.GetType().ToString());
+						textMesh.text = string.Format("Class: {0}\nProgress: {1}% ({2}/{3})\nRead: Failed", 
+							task.GetType().ToString(), 
+							task.result.readLength*100f/task.runningTaskParam.length,
+							task.result.readLength, 
+							task.runningTaskParam.length);
 						textMesh.color = Color.red;
 					}
 				}

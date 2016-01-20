@@ -7,6 +7,8 @@ namespace Ghost.Task.IO
 {
 	public class SyncReadStream : TaskReadStream
 	{
+		public int partLength = 1024;
+
 		#region override
 		protected override bool DoUpdate (DriverUpdateParams param)
 		{
@@ -15,7 +17,7 @@ namespace Ghost.Task.IO
 				result.readLength += runningTaskParam.stream.Read(
 					runningTaskParam.buffer, 
 					runningTaskParam.bufferOffset+result.readLength, 
-					runningTaskParam.length-result.readLength);
+					Mathf.Min(partLength, runningTaskParam.length-result.readLength));
 			}
 			catch (IOException e)
 			{
