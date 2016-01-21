@@ -75,6 +75,7 @@ namespace Ghost.Sample
 
 		public override void EnterState (TaskState state)
 		{
+			base.EnterState(state);
 			switch (state)
 			{
 			case TaskState.Idle:

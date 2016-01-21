@@ -68,6 +68,7 @@ namespace Ghost.Task.IO
 
 		public override void EnterState (TaskState state)
 		{
+			base.EnterState(state);
 			switch (state)
 			{
 			case TaskState.Pending:

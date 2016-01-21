@@ -10,16 +10,15 @@ using Ghost.Utility;
 
 namespace Ghost.Sample
 {
-	public class SampleTaskTextFileStream : MonoBehaviour 
+	public abstract class SampleTaskTextFileStream : MonoBehaviour 
 	{
 		public TaskDriver driver = null;
 		public TextMesh textMesh = null;
 		public string filePath = null;
-		public int readPartMaxSize = 1024;
 
-		private SyncReadStream syncReadTask = null;
+		protected TaskReadStream readTask = null;
 
-		public bool StartSyncRead()
+		public bool StartRead()
 		{
 			if (null == driver)
 			{
@@ -33,7 +32,7 @@ namespace Ghost.Sample
 			FileStream stream = null;
 			try
 			{
-				stream = new FileStream(filePath, FileMode.Open);
+				stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
 				if (!stream.CanRead)
 				{
 					stream.Close();
@@ -53,40 +52,39 @@ namespace Ghost.Sample
 				stream.Close();
 				return false;
 			}
-			EndSyncReadTask();
+			EndRead();
 
-			syncReadTask = Factory.Create<SyncReadStream>(driver);
-			syncReadTask.taskParam = new TaskReadStream.Param();
-			syncReadTask.taskParam.stream = stream;
-			syncReadTask.taskParam.buffer = new byte[stream.Length];
-			syncReadTask.taskParam.length = (int)stream.Length;
-			if (0 >= readPartMaxSize)
-			{
-				readPartMaxSize = 1;
-			}
-			syncReadTask.partLength = readPartMaxSize;
+			readTask = CreateTask();
+			readTask.taskParam = new TaskReadStream.Param();
+			readTask.taskParam.stream = stream;
+			readTask.taskParam.buffer = new byte[stream.Length];
+			readTask.taskParam.length = (int)stream.Length;
 
-			if (!syncReadTask.Operate(TaskOperation.Start))
+			if (!readTask.Operate(TaskOperation.Start))
 			{
 				stream.Close();
 				return false;
 			}
-			StartCoroutine(CheckReadTaskResult(syncReadTask, textMesh));
+			StartCoroutine(CheckReadTaskResult(readTask, textMesh));
 			return true;
 		}
-		public bool EndSyncReadTask()
+		public bool EndRead()
 		{
-			if (null == syncReadTask)
+			if (null == readTask)
 			{
 				return false;
 			}
-			if (!syncReadTask.Operate(TaskOperation.End))
+			if (!readTask.Operate(TaskOperation.End))
 			{
 				return false;
 			}
-			syncReadTask = null;
+			readTask = null;
 			return true;
 		}
+
+		#region abstract
+		protected abstract TaskReadStream CreateTask();
+		#endregion abstract
 
 		#region behaviour
 		IEnumerator CheckReadTaskResult(TaskReadStream task, TextMesh textMesh)

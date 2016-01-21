@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Ghost.Sample.EditorTool
 {
-	[CustomEditor(typeof(SampleTaskTextFileStream)), CanEditMultipleObjects]
+	[CustomEditor(typeof(SampleTaskTextFileStream), true), CanEditMultipleObjects]
 	public class E_SampleTaskTextFileStream : Editor
 	{
 		public override void OnInspectorGUI ()
@@ -21,7 +21,7 @@ namespace Ghost.Sample.EditorTool
 				foreach (var t in targets)
 				{
 					var task = t as SampleTaskTextFileStream;
-					if (task.StartSyncRead())
+					if (task.StartRead())
 					{
 						++count;
 					}
@@ -34,7 +34,7 @@ namespace Ghost.Sample.EditorTool
 				foreach (var t in targets)
 				{
 					var task = t as SampleTaskTextFileStream;
-					if (task.EndSyncReadTask())
+					if (task.EndRead())
 					{
 						++count;
 					}
