@@ -35,7 +35,7 @@ namespace Ghost.Task
 		#endregion behaviour
 	}
 
-	internal abstract class Driver 
+	public abstract class Driver 
 	{
 		#region static
 		public static Driver Create(DriverMode mode)

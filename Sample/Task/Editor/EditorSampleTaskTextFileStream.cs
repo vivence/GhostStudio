@@ -15,7 +15,7 @@ namespace Ghost.Sample.EditorTool
 				return;
 			}
 			EditorGUILayout.Separator();
-			if (GUILayout.Button("SyncReadStart"))
+			if (GUILayout.Button("StartRead"))
 			{
 				int count = 0;
 				foreach (var t in targets)
@@ -26,9 +26,9 @@ namespace Ghost.Sample.EditorTool
 						++count;
 					}
 				}
-				Debug.LogFormat("Start task(sync read) count: {0}", count);
+				Debug.LogFormat("Start read task count: {0}", count);
 			}
-			if (GUILayout.Button("SyncReadEnd"))
+			if (GUILayout.Button("EndRead"))
 			{
 				int count = 0;
 				foreach (var t in targets)
@@ -39,7 +39,7 @@ namespace Ghost.Sample.EditorTool
 						++count;
 					}
 				}
-				Debug.LogFormat("End task(sync read) count: {0}", count);
+				Debug.LogFormat("End read task count: {0}", count);
 			}
 		}
 	

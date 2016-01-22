@@ -22,10 +22,20 @@ namespace Ghost.Sample
 		{
 			if (null == driver)
 			{
+				if (null != textMesh)
+				{
+					textMesh.text = string.Format("No driver");
+					textMesh.color = Color.red;
+				}
 				return false;
 			}
 			if (string.IsNullOrEmpty(filePath))
 			{
+				if (null != textMesh)
+				{
+					textMesh.text = string.Format("No file path");
+					textMesh.color = Color.red;
+				}
 				return false;
 			}
 
@@ -35,12 +45,22 @@ namespace Ghost.Sample
 				stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
 				if (!stream.CanRead)
 				{
+					if (null != textMesh)
+					{
+						textMesh.text = string.Format("Can't read: {0}", filePath);
+						textMesh.color = Color.red;
+					}
 					stream.Close();
 					return false;
 				}
 			}
-			catch (IOException)
+			catch (IOException e)
 			{
+				if (null != textMesh)
+				{
+					textMesh.text = string.Format("Open file Failed: {0}", e.Message);
+					textMesh.color = Color.red;
+				}
 				if (null != stream)
 				{
 					stream.Close();
@@ -49,6 +69,11 @@ namespace Ghost.Sample
 			}
 			if (0 >= stream.Length)
 			{
+				if (null != textMesh)
+				{
+					textMesh.text = string.Format("File is empty: {0}", filePath);
+					textMesh.color = Color.red;
+				}
 				stream.Close();
 				return false;
 			}
@@ -62,6 +87,12 @@ namespace Ghost.Sample
 
 			if (!readTask.Operate(TaskOperation.Start))
 			{
+				if (null != textMesh)
+				{
+					textMesh.text = string.Format("Class: {0}\nCan't start", 
+						readTask.GetType().ToString());
+					textMesh.color = Color.white;
+				}
 				stream.Close();
 				return false;
 			}
