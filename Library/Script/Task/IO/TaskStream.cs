@@ -5,20 +5,43 @@ using Ghost.Extension;
 
 namespace Ghost.Task.IO
 {
-	public abstract class TaskReadStream : Entity
+	public abstract class TaskStream : Entity
 	{
+		public enum Access
+		{
+			Read,
+			Write
+		}
+
 		public class Param
 		{
+			public Access access = Access.Read;
+
 			public Stream stream = null;
 			public byte[] buffer = null;
 			public int bufferOffset = 0;
 			public int length = 0;
 
+			public bool streamCanAccess
+			{
+				get
+				{
+					switch (access)
+					{
+					case Access.Read:
+						return stream.CanRead;
+					case Access.Write:
+						return stream.CanWrite;
+					}
+					return false;
+				}
+			}
+
 			public bool valid
 			{
 				get
 				{
-					return null != stream && stream.CanRead
+					return null != stream && streamCanAccess
 						&& !buffer.IsNullOrEmpty()
 						&& buffer.CheckIndex(bufferOffset)
 						&& buffer.Length >= (bufferOffset+length);
@@ -27,12 +50,12 @@ namespace Ghost.Task.IO
 		}
 		public class Result
 		{
-			public int readLength = 0;
+			public int completedLength = 0;
 			public IOException exception = null;
 
 			public void Reset()
 			{
-				readLength = 0;
+				completedLength = 0;
 				exception = null;
 			}
 		}
@@ -42,7 +65,7 @@ namespace Ghost.Task.IO
 		public Param runningTaskParam{get; private set;}
 		public Result result{get;private set;}
 
-		public TaskReadStream()
+		public TaskStream()
 		{
 			result = new Result();
 		}

@@ -15,10 +15,12 @@ namespace Ghost.Sample
 		public TaskDriver driver = null;
 		public TextMesh textMesh = null;
 		public string filePath = null;
+		public TaskStream.Access access = TaskStream.Access.Read;
+		public string writeData = null;
 
-		protected TaskReadStream readTask = null;
+		protected TaskStream accessTask = null;
 
-		public bool StartRead()
+		public bool StartAccess()
 		{
 			if (null == driver)
 			{
@@ -42,12 +44,29 @@ namespace Ghost.Sample
 			FileStream stream = null;
 			try
 			{
-				stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-				if (!stream.CanRead)
+				var path = Path.Combine(Application.streamingAssetsPath, filePath);
+				bool canAccess = false;
+				switch (access)
+				{
+				case TaskStream.Access.Read:
+					stream = new FileStream(path, FileMode.Open, FileAccess.Read);
+					canAccess = stream.CanRead;
+					break;
+				case TaskStream.Access.Write:
+					if (!Directory.Exists(Path.GetDirectoryName(path)))
+					{
+						Directory.CreateDirectory(Path.GetDirectoryName(path));
+					}
+					stream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write);
+					canAccess = stream.CanWrite;
+					break;
+				}
+
+				if (!canAccess)
 				{
 					if (null != textMesh)
 					{
-						textMesh.text = string.Format("Can't read: {0}", filePath);
+						textMesh.text = string.Format("Can't {0}: {1}", access.ToString(), filePath);
 						textMesh.color = Color.red;
 					}
 					stream.Close();
@@ -67,58 +86,81 @@ namespace Ghost.Sample
 				}
 				return false;
 			}
-			if (0 >= stream.Length)
+
+			byte[] buffer = null;
+			switch (access)
+			{
+			case TaskStream.Access.Read:
+				if (0 >= stream.Length)
+				{
+					if (null != textMesh)
+					{
+						textMesh.text = string.Format("File is empty: {0}", filePath);
+						textMesh.color = Color.red;
+					}
+					stream.Close();
+					return false;
+				}
+				buffer = new byte[stream.Length];
+				break;
+			case TaskStream.Access.Write:
+				if (string.IsNullOrEmpty(writeData))
+				{
+					if (null != textMesh)
+					{
+						textMesh.text = string.Format("Write data is empty");
+						textMesh.color = Color.red;
+					}
+					stream.Close();
+					return false;
+				}
+				buffer = Encoding.UTF8.GetBytes(writeData);
+				break;
+			}
+
+			EndAccess();
+
+			accessTask = CreateTask();
+			accessTask.taskParam = new TaskStream.Param();
+			accessTask.taskParam.access = access;
+			accessTask.taskParam.stream = stream;
+			accessTask.taskParam.buffer = buffer;
+			accessTask.taskParam.length = buffer.Length;
+
+			if (!accessTask.Operate(TaskOperation.Start))
 			{
 				if (null != textMesh)
 				{
-					textMesh.text = string.Format("File is empty: {0}", filePath);
+					textMesh.text = string.Format("Class: {0}\nCan't start", 
+						accessTask.GetType().ToString());
 					textMesh.color = Color.red;
 				}
 				stream.Close();
 				return false;
 			}
-			EndRead();
-
-			readTask = CreateTask();
-			readTask.taskParam = new TaskReadStream.Param();
-			readTask.taskParam.stream = stream;
-			readTask.taskParam.buffer = new byte[stream.Length];
-			readTask.taskParam.length = (int)stream.Length;
-
-			if (!readTask.Operate(TaskOperation.Start))
-			{
-				if (null != textMesh)
-				{
-					textMesh.text = string.Format("Class: {0}\nCan't start", 
-						readTask.GetType().ToString());
-					textMesh.color = Color.white;
-				}
-				stream.Close();
-				return false;
-			}
-			StartCoroutine(CheckReadTaskResult(readTask, textMesh));
+			StartCoroutine(CheckReadTaskResult(accessTask, textMesh));
 			return true;
 		}
-		public bool EndRead()
+		public bool EndAccess()
 		{
-			if (null == readTask)
+			if (null == accessTask)
 			{
 				return false;
 			}
-			if (!readTask.Operate(TaskOperation.End))
+			if (!accessTask.Operate(TaskOperation.End))
 			{
 				return false;
 			}
-			readTask = null;
+			accessTask = null;
 			return true;
 		}
 
 		#region abstract
-		protected abstract TaskReadStream CreateTask();
+		protected abstract TaskStream CreateTask();
 		#endregion abstract
 
 		#region behaviour
-		IEnumerator CheckReadTaskResult(TaskReadStream task, TextMesh textMesh)
+		IEnumerator CheckReadTaskResult(TaskStream task, TextMesh textMesh)
 		{
 			while (TaskState.Pending == task.currentState)
 			{
@@ -136,8 +178,8 @@ namespace Ghost.Sample
 				{
 					textMesh.text = string.Format("Class: {0}\nProgress: {1}% ({2}/{3})", 
 						task.GetType().ToString(), 
-						task.result.readLength*100f/task.runningTaskParam.length,
-						task.result.readLength, 
+						task.result.completedLength*100f/task.runningTaskParam.length,
+						task.result.completedLength, 
 						task.runningTaskParam.length);
 					textMesh.color = Color.green;
 				}
@@ -153,21 +195,23 @@ namespace Ghost.Sample
 				}
 				else
 				{
-					if (task.result.readLength == task.runningTaskParam.length)
+					if (task.result.completedLength == task.runningTaskParam.length)
 					{
-						textMesh.text = string.Format("Class: {0}\nRead: Ok\nLength: {1}\nContent:\n{2}", 
+						textMesh.text = string.Format("Class: {0}\n{1}: Ok\nLength: {2}\nContent:\n{3}", 
 							task.GetType().ToString(),
-							task.result.readLength,
-							Encoding.UTF8.GetString(task.runningTaskParam.buffer, task.runningTaskParam.bufferOffset, task.result.readLength));
+							access.ToString(),
+							task.result.completedLength,
+							Encoding.UTF8.GetString(task.runningTaskParam.buffer, task.runningTaskParam.bufferOffset, task.result.completedLength));
 						textMesh.color = Color.blue;
 					}
 					else
 					{
-						textMesh.text = string.Format("Class: {0}\nProgress: {1}% ({2}/{3})\nRead: Failed", 
+						textMesh.text = string.Format("Class: {0}\nProgress: {1}% ({2}/{3})\n{4}: Failed", 
 							task.GetType().ToString(), 
-							task.result.readLength*100f/task.runningTaskParam.length,
-							task.result.readLength, 
-							task.runningTaskParam.length);
+							task.result.completedLength*100f/task.runningTaskParam.length,
+							task.result.completedLength, 
+							task.runningTaskParam.length,
+							access.ToString());
 						textMesh.color = Color.red;
 					}
 				}

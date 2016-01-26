@@ -7,17 +7,17 @@ namespace Ghost.Sample
 {
 	public class SampleTaskTextFileStreamSync : SampleTaskTextFileStream 
 	{
-		public int readPartMaxSize = 1024;
+		public int syncPartMaxSize = 1024;
 
 		#region override
-		protected override TaskReadStream CreateTask ()
+		protected override TaskStream CreateTask ()
 		{
-			var task = Factory.Create<SyncReadStream>(driver);
-			if (0 >= readPartMaxSize)
+			var task = Factory.Create<SyncStream>(driver);
+			if (0 >= syncPartMaxSize)
 			{
-				readPartMaxSize = 1;
+				syncPartMaxSize = 1;
 			}
-			task.partLength = readPartMaxSize;
+			task.partLength = syncPartMaxSize;
 			return task;
 		}
 		#endregion override

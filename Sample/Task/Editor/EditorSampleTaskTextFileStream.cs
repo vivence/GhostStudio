@@ -15,31 +15,31 @@ namespace Ghost.Sample.EditorTool
 				return;
 			}
 			EditorGUILayout.Separator();
-			if (GUILayout.Button("StartRead"))
+			if (GUILayout.Button("Start"))
 			{
 				int count = 0;
 				foreach (var t in targets)
 				{
 					var task = t as SampleTaskTextFileStream;
-					if (task.StartRead())
+					if (task.StartAccess())
 					{
 						++count;
 					}
 				}
-				Debug.LogFormat("Start read task count: {0}", count);
+				Debug.LogFormat("Start task count: {0}", count);
 			}
-			if (GUILayout.Button("EndRead"))
+			if (GUILayout.Button("End"))
 			{
 				int count = 0;
 				foreach (var t in targets)
 				{
 					var task = t as SampleTaskTextFileStream;
-					if (task.EndRead())
+					if (task.EndAccess())
 					{
 						++count;
 					}
 				}
-				Debug.LogFormat("End read task count: {0}", count);
+				Debug.LogFormat("End task count: {0}", count);
 			}
 		}
 	
