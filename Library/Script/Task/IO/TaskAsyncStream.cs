@@ -19,6 +19,7 @@ namespace Ghost.Task.IO
 			try
 			{
 				accessLength = runningTaskParam.length-result.completedLength;
+				var oldProgress = result.completedLength/runningTaskParam.length;
 				var ar = accessBeginFunc(
 					runningTaskParam.buffer, 
 					runningTaskParam.bufferOffset+result.completedLength,
@@ -29,6 +30,8 @@ namespace Ghost.Task.IO
 				{
 					asyncResult = ar;
 				}
+				var newProgress = result.completedLength/runningTaskParam.length;
+				OnProgressChanged(oldProgress, newProgress);
 			}
 			catch (IOException e)
 			{

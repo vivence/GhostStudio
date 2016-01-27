@@ -19,10 +19,13 @@ namespace Ghost.Task.IO
 			try
 			{
 				accessLength = Mathf.Min(partLength, runningTaskParam.length-result.completedLength);
+				var oldProgress = result.completedLength/runningTaskParam.length;
 				result.completedLength += accessFunc(
 					runningTaskParam.buffer, 
 					runningTaskParam.bufferOffset+result.completedLength, 
 					accessLength);
+				var newProgress = result.completedLength/runningTaskParam.length;
+				OnProgressChanged(oldProgress, newProgress);
 			}
 			catch (IOException e)
 			{

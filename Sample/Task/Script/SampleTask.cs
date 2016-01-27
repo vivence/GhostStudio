@@ -65,11 +65,13 @@ namespace Ghost.Sample
 		#region override
 		protected override bool DoUpdate (DriverUpdateParams param)
 		{
+			var oldProgress = progress;
 			progress = Mathf.Clamp01(progress + param.deltaTime/duration);
 			if (null != material)
 			{
 				material.color = Color.Lerp(runningColor.Key, runningColor.Value, progress);
 			}
+			OnProgressChanged(oldProgress, progress);
 			return 1 > progress;
 		}
 

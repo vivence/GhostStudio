@@ -9,6 +9,8 @@ namespace Ghost
 		bool AllowSwitchState(_State currentState, _State nextState);
 		void ExitState(_State state);
 		void EnterState(_State state);
+
+		void OnStateChanged(_State oldState, _State newState);
 	}
 
 	public class StateMachine<_State, _Operation>
@@ -27,8 +29,13 @@ namespace Ghost
 			}
 			private set
 			{
+				var oldState = currentState;
 				currentState_ = value;
 				currentOpts = GetOperations(value);
+				if (null != traits)
+				{
+					traits.OnStateChanged(oldState, currentState);
+				}
 			}
 		}
 

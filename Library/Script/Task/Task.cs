@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 
 namespace Ghost.Task
@@ -22,6 +23,11 @@ namespace Ghost.Task
 	{
 		private Driver driver = null;
 		private StateMachine<TaskState, TaskOperation> stateMachine = new StateMachine<TaskState, TaskOperation>();
+
+		// task, oldState, newState
+		public event Action<Entity, TaskState, TaskState> stateChangedListener = null;
+		// task, oldProgress, newProgress
+		public event Action<Entity, float, float> progressChangedListener = null;
 
 		public TaskState currentState
 		{
@@ -137,6 +143,21 @@ namespace Ghost.Task
 		{
 
 		}
+		public virtual void OnStateChanged(TaskState oldState, TaskState newState)
+		{
+			if (null != stateChangedListener)
+			{
+				stateChangedListener(this, oldState, newState);
+			}
+		}
 		#endregion virtual IStateMachineTraits
+
+		protected virtual void OnProgressChanged(float oldProgress, float newProgress)
+		{
+			if (null != progressChangedListener)
+			{
+				progressChangedListener(this, oldProgress, newProgress);
+			}
+		}
 	}
 } // namespace Ghost.Task

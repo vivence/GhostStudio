@@ -57,7 +57,7 @@ namespace Ghost.Sample
 					{
 						Directory.CreateDirectory(Path.GetDirectoryName(path));
 					}
-					stream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write);
+					stream = new FileStream(path, FileMode.Truncate, FileAccess.Write);
 					canAccess = stream.CanWrite;
 					break;
 				}
@@ -121,6 +121,10 @@ namespace Ghost.Sample
 			EndAccess();
 
 			accessTask = CreateTask();
+
+			accessTask.stateChangedListener += OnTaskStateChanged;
+			accessTask.progressChangedListener += OnTaskProgressChanged;
+
 			accessTask.taskParam = new TaskStream.Param();
 			accessTask.taskParam.access = access;
 			accessTask.taskParam.stream = stream;
@@ -138,7 +142,6 @@ namespace Ghost.Sample
 				stream.Close();
 				return false;
 			}
-			StartCoroutine(CheckReadTaskResult(accessTask, textMesh));
 			return true;
 		}
 		public bool EndAccess()
@@ -151,6 +154,8 @@ namespace Ghost.Sample
 			{
 				return false;
 			}
+			accessTask.stateChangedListener -= OnTaskStateChanged;
+			accessTask.progressChangedListener -= OnTaskProgressChanged;
 			accessTask = null;
 			return true;
 		}
@@ -159,66 +164,80 @@ namespace Ghost.Sample
 		protected abstract TaskStream CreateTask();
 		#endregion abstract
 
-		#region behaviour
-		IEnumerator CheckReadTaskResult(TaskStream task, TextMesh textMesh)
+		#region event listener
+		private void OnTaskStateChanged(Entity source, TaskState oldState, TaskState newState)
 		{
-			while (TaskState.Pending == task.currentState)
+			var task = source as TaskStream;
+			switch (newState)
 			{
+			case TaskState.Pending:
 				if (null != textMesh)
 				{
 					textMesh.text = string.Format("Class: {0}\nPending...", 
 						task.GetType().ToString());
 					textMesh.color = Color.white;
 				}
-				yield return null;
-			}
-			while (TaskState.Running == task.currentState)
-			{
+				break;
+			case TaskState.Running:
 				if (null != textMesh)
 				{
-					textMesh.text = string.Format("Class: {0}\nProgress: {1}% ({2}/{3})", 
-						task.GetType().ToString(), 
-						task.result.completedLength*100f/task.runningTaskParam.length,
-						task.result.completedLength, 
-						task.runningTaskParam.length);
+					textMesh.text = string.Format("Class: {0}\nRunning...", 
+						task.GetType().ToString());
 					textMesh.color = Color.green;
 				}
-				yield return null;
-			}
-			if (null != textMesh)
-			{
-				if (null != task.result.exception)
+				break;
+			case TaskState.Idle:
+				if (TaskState.Running == oldState && null != textMesh)
 				{
-					textMesh.text = string.Format("Class: {0}\nException: {1}", 
-						task.GetType().ToString(), task.result.exception.Message);
-					textMesh.color = Color.red;
-				}
-				else
-				{
-					if (task.result.completedLength == task.runningTaskParam.length)
+					if (null != task.result.exception)
 					{
-						textMesh.text = string.Format("Class: {0}\n{1}: Ok\nLength: {2}\nContent:\n{3}", 
-							task.GetType().ToString(),
-							access.ToString(),
-							task.result.completedLength,
-							Encoding.UTF8.GetString(task.runningTaskParam.buffer, task.runningTaskParam.bufferOffset, task.result.completedLength));
-						textMesh.color = Color.blue;
+						textMesh.text = string.Format("Class: {0}\nException: {1}", 
+							task.GetType().ToString(), task.result.exception.Message);
+						textMesh.color = Color.red;
 					}
 					else
 					{
-						textMesh.text = string.Format("Class: {0}\nProgress: {1}% ({2}/{3})\n{4}: Failed", 
-							task.GetType().ToString(), 
-							task.result.completedLength*100f/task.runningTaskParam.length,
-							task.result.completedLength, 
-							task.runningTaskParam.length,
-							access.ToString());
-						textMesh.color = Color.red;
+						if (task.result.completedLength == task.runningTaskParam.length)
+						{
+							textMesh.text = string.Format("Class: {0}\n{1}: Ok\nLength: {2}\nContent:\n{3}", 
+								task.GetType().ToString(),
+								access.ToString(),
+								task.result.completedLength,
+								Encoding.UTF8.GetString(task.runningTaskParam.buffer, task.runningTaskParam.bufferOffset, task.result.completedLength));
+							textMesh.color = Color.blue;
+						}
+						else
+						{
+							textMesh.text = string.Format("Class: {0}\nProgress: {1}% ({2}/{3})\n{4}: Failed", 
+								task.GetType().ToString(), 
+								task.result.completedLength*100f/task.runningTaskParam.length,
+								task.result.completedLength, 
+								task.runningTaskParam.length,
+								access.ToString());
+							textMesh.color = Color.red;
+						}
 					}
 				}
+				if (null != task.runningTaskParam && null != task.runningTaskParam.stream)
+				{
+					task.runningTaskParam.stream.Close();
+				}
+				break;
 			}
-
-			task.runningTaskParam.stream.Close();
 		}
-		#endregion behaviour
+		private void OnTaskProgressChanged(Entity source, float oldProgress, float newProgress)
+		{
+			if (null != textMesh)
+			{
+				var task = source as TaskStream;
+				textMesh.text = string.Format("Class: {0}\nProgress: {1}% ({2}/{3})", 
+					task.GetType().ToString(), 
+					task.result.completedLength*100f/task.runningTaskParam.length,
+					task.result.completedLength, 
+					task.runningTaskParam.length);
+				textMesh.color = Color.green;
+			}
+		}
+		#endregion event listener
 	}
 } // namespace Ghost.Sample
