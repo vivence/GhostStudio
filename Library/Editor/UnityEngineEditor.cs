@@ -40,7 +40,7 @@ namespace Ghost.EditorTool
 		}
 		static IVector3Property GetVector3PropertyDelegate(SerializedProperty property)
 		{
-			return typeof(Quaternion).Name == property.type ? Vector3PropertyByQuaternion.Global : Vector3Property.Global;
+			return SerializedPropertyType.Quaternion == property.propertyType ? Vector3PropertyByQuaternion.Global : Vector3Property.Global;
 		}
 
 		static Rect GetControlRectOneLine()
