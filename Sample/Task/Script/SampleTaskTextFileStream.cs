@@ -239,5 +239,17 @@ namespace Ghost.Sample
 			}
 		}
 		#endregion event listener
+
+		#region behaviour
+		void OnDestroy()
+		{
+			if (null != accessTask && null != accessTask.runningTaskParam.stream)
+			{
+				var stream = accessTask.runningTaskParam.stream;
+				EndAccess();
+				stream.Close();
+			}
+		}
+		#endregion behaviour
 	}
 } // namespace Ghost.Sample
