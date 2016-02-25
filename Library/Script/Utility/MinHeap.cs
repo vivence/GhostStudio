@@ -104,7 +104,7 @@ namespace Ghost.Utility
 			{
 				for (var n = size/2; n > 0; --n)
 				{
-					ShiftDown(array, size, n);
+					ShiftDown(n);
 				}
 			}
 		}
