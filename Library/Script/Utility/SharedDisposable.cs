@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System;
-using System.Collections.Generic;
 
 namespace Ghost.Utility
 {
@@ -10,9 +9,16 @@ namespace Ghost.Utility
 		{
 			public int count = 0;
 		}
-
-		private IDisposable obj;
 		private RefCount refCount;
+		public int referenceCount
+		{
+			get
+			{
+				return refCount.count;
+			}
+		}
+
+		public IDisposable obj{get;private set;}
 
 		public SharedDisposable (IDisposable disposable)
 		{
@@ -49,4 +55,5 @@ namespace Ghost.Utility
 		}
 		#endregion override
 	}
+
 } // namespace Ghost.Utility

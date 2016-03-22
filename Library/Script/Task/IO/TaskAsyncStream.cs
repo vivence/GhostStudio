@@ -19,7 +19,6 @@ namespace Ghost.Task.IO
 			try
 			{
 				accessLength = runningTaskParam.length-result.completedLength;
-				var oldProgress = result.completedLength/runningTaskParam.length;
 				var ar = accessBeginFunc(
 					runningTaskParam.buffer, 
 					runningTaskParam.bufferOffset+result.completedLength,
@@ -28,10 +27,9 @@ namespace Ghost.Task.IO
 					null);
 				if (!ar.IsCompleted)
 				{
+					// set API token
 					asyncResult = ar;
 				}
-				var newProgress = result.completedLength/runningTaskParam.length;
-				OnProgressChanged(oldProgress, newProgress);
 			}
 			catch (IOException e)
 			{
@@ -45,13 +43,21 @@ namespace Ghost.Task.IO
 			{
 				if (null == asyncResult)
 				{
+					// no API token
 					return;
 				}
+				// use stored API token
 				ar = asyncResult;
 			}
 			try
 			{
+				var oldProgress = result.completedLength/runningTaskParam.length;
+
 				result.completedLength += accessEndFunc(ar);
+
+				var newProgress = result.completedLength/runningTaskParam.length;
+				OnProgressChanged(oldProgress, newProgress);
+
 				if (ar.IsCompleted)
 				{
 					if(result.completedLength < runningTaskParam.length)
@@ -60,6 +66,7 @@ namespace Ghost.Task.IO
 					}
 					else
 					{
+						// clear API token because completed
 						asyncResult = null;
 					}
 				}
@@ -72,6 +79,7 @@ namespace Ghost.Task.IO
 
 		private void AccessCallback(IAsyncResult ar)
 		{
+			// use callback API token
 			EndAccess(ar);
 			if (null == result.exception && !ar.IsCompleted)
 			{
@@ -92,6 +100,7 @@ namespace Ghost.Task.IO
 			switch (state)
 			{
 			case TaskState.Pending:
+				// clear API token
 				asyncResult = null;
 				break;
 			case TaskState.Running:

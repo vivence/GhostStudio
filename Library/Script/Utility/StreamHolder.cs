@@ -6,7 +6,7 @@ namespace Ghost.Utility
 {
 	public class StreamHolder : ResourceHolder
 	{
-		private Stream stream;
+		public Stream stream{get;private set;}
 
 		public StreamHolder(Stream s)
 		{
