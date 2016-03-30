@@ -13,6 +13,12 @@ namespace Ghost.Task.IO
 		private int accessLength = 0;
 		private Func<byte[], int, int, int> accessFunc = null;
 
+		private int WriteAccessFunc(byte[] buffer, int offset, int count)
+		{
+			runningTaskParam.stream.Write(buffer, offset, count);
+			return accessLength;
+		}
+
 		#region override
 		protected override bool DoUpdate (DriverUpdateParams param)
 		{
@@ -47,10 +53,7 @@ namespace Ghost.Task.IO
 					accessFunc = runningTaskParam.stream.Read;
 					break;
 				case Access.Write:
-					accessFunc = delegate(byte[] arg1, int arg2, int arg3) {
-						runningTaskParam.stream.Write(arg1, arg2, arg3);
-						return accessLength;
-					};
+					accessFunc = WriteAccessFunc;
 					break;
 				}
 				break;

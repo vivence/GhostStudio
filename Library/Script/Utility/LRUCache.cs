@@ -152,6 +152,7 @@ namespace Ghost.Utility
 			{
 				ReleaseValue(value);
 				cache.Remove(key);
+				return true;
 			}
 			return false;
 		}
