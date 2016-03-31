@@ -11,14 +11,6 @@ namespace Ghost.Sample
 		public int syncPartMaxSize = 1024;
 
 		#region override
-		protected override FileOptions fileOptions
-		{
-			get
-			{
-				return base.fileOptions|FileOptions.Asynchronous;
-			}
-		}
-
 		protected override TaskStream CreateTask ()
 		{
 			var task = Factory.Create<SyncStream>(driver);

@@ -51,7 +51,7 @@ namespace Ghost.Sample
 				switch (access)
 				{
 				case TaskStream.Access.Read:
-					stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, fileBufferSize, fileOptions);
+					stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, fileBufferSize, fileAsync);
 					canAccess = stream.CanRead;
 					break;
 				case TaskStream.Access.Write:
@@ -59,7 +59,7 @@ namespace Ghost.Sample
 					{
 						Directory.CreateDirectory(Path.GetDirectoryName(path));
 					}
-					stream = new FileStream(path, FileMode.Truncate, FileAccess.Write, FileShare.None, fileBufferSize, fileOptions);
+					stream = new FileStream(path, FileMode.Truncate, FileAccess.Write, FileShare.None, fileBufferSize, fileAsync);
 					canAccess = stream.CanWrite;
 					break;
 				}
@@ -163,11 +163,11 @@ namespace Ghost.Sample
 		}
 
 		#region virtual
-		protected virtual FileOptions fileOptions
+		protected virtual bool fileAsync
 		{
 			get
 			{
-				return FileOptions.None;
+				return false;
 			}
 		}
 		#endregion virtual

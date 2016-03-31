@@ -8,6 +8,14 @@ namespace Ghost.Sample
 	public class SampleTaskTextFileStreamAsync : SampleTaskTextFileStream 
 	{
 		#region override
+		protected override bool fileAsync
+		{
+			get
+			{
+				return true;
+			}
+		}
+
 		protected override TaskStream CreateTask ()
 		{
 			return Factory.Create<AsyncStream>(driver);
