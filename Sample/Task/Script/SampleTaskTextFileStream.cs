@@ -18,6 +18,8 @@ namespace Ghost.Sample
 		public TaskStream.Access access = TaskStream.Access.Read;
 		public string writeData = null;
 
+		public int fileBufferSize = 1024;
+
 		protected TaskStream accessTask = null;
 
 		public bool StartAccess()
@@ -49,7 +51,7 @@ namespace Ghost.Sample
 				switch (access)
 				{
 				case TaskStream.Access.Read:
-					stream = new FileStream(path, FileMode.Open, FileAccess.Read);
+					stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, fileBufferSize, fileOptions);
 					canAccess = stream.CanRead;
 					break;
 				case TaskStream.Access.Write:
@@ -57,7 +59,7 @@ namespace Ghost.Sample
 					{
 						Directory.CreateDirectory(Path.GetDirectoryName(path));
 					}
-					stream = new FileStream(path, FileMode.Truncate, FileAccess.Write);
+					stream = new FileStream(path, FileMode.Truncate, FileAccess.Write, FileShare.None, fileBufferSize, fileOptions);
 					canAccess = stream.CanWrite;
 					break;
 				}
@@ -159,6 +161,16 @@ namespace Ghost.Sample
 			accessTask = null;
 			return true;
 		}
+
+		#region virtual
+		protected virtual FileOptions fileOptions
+		{
+			get
+			{
+				return FileOptions.None;
+			}
+		}
+		#endregion virtual
 
 		#region abstract
 		protected abstract TaskStream CreateTask();
