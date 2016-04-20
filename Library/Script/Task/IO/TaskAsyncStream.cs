@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Threading;
 using Ghost.Extension;
 
 namespace Ghost.Task.IO
@@ -24,7 +25,7 @@ namespace Ghost.Task.IO
 					runningTaskParam.bufferOffset+result.completedLength,
 					accessLength,
 					AccessCallback,
-					null);
+					this);
 				if (!ar.IsCompleted)
 				{
 					// set API token
@@ -77,9 +78,22 @@ namespace Ghost.Task.IO
 			}
 		}
 
-		private void AccessCallback(IAsyncResult ar)
+		private IAsyncResult accessCallbackResult;
+		private int accessCallbacked = 0;
+		private static void AccessCallback(IAsyncResult ar)
 		{
+//			Debug.LogFormat("current thread({0}): {1}", Thread.CurrentThread.ManagedThreadId, Thread.CurrentThread.Name);
+//			Debug.LogFormat("CompletedSynchronously={0}", ar.CompletedSynchronously);
 			// use callback API token
+			var self = ar.AsyncState as AsyncStream;
+			if (null != self)
+			{
+				self.accessCallbackResult = ar;
+				Interlocked.Exchange(ref self.accessCallbacked, 1);
+			}
+		}
+		private void DoAccessCallback(IAsyncResult ar)
+		{
 			EndAccess(ar);
 			if (null == result.exception && !ar.IsCompleted)
 			{
@@ -90,6 +104,10 @@ namespace Ghost.Task.IO
 		#region override
 		protected override bool DoUpdate (DriverUpdateParams param)
 		{
+			if (1 == Interlocked.CompareExchange(ref accessCallbacked, 0, 1))
+			{
+				DoAccessCallback(accessCallbackResult);
+			}
 			return null == result.exception 
 				&& result.completedLength < runningTaskParam.length;
 		}
