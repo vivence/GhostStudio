@@ -44,15 +44,6 @@ namespace Ghost.Async
 			#endregion override
 		}
 		private ConsumerContext context;
-		private Thread thread;
-
-		public bool working
-		{
-			get
-			{
-				return null != thread;
-			}
-		}
 
 		public bool StartWork(System.Action<object> backgroundProc)
 		{
@@ -117,7 +108,7 @@ namespace Ghost.Async
 					}
 				}
 			}
-			catch (ThreadInterruptedException e)
+			catch (ThreadInterruptedException)
 			{
 
 			}

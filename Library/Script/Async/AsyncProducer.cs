@@ -40,7 +40,7 @@ namespace Ghost.Async
 		protected override void DoEnd ()
 		{
 			base.DoEnd ();
-
+			ClearProducts();
 			context.Close();
 			context = null;
 		}
@@ -65,6 +65,15 @@ namespace Ghost.Async
 			return true;
 		}
 
+		public void ClearProducts()
+		{
+			var p = context.GetProductContainer();
+			if (null != p)
+			{
+				context.ReuseProductContainer(p);
+			}
+		}
+
 		#region background
 		private static void BkgProc(object param)
 		{
@@ -84,7 +93,7 @@ namespace Ghost.Async
 					}
 				}
 			}
-			catch (ThreadInterruptedException e)
+			catch (ThreadInterruptedException)
 			{
 			}
 		}
