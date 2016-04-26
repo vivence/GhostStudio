@@ -307,7 +307,7 @@ namespace Ghost
 		#endregion abstract
 
 		#region behaviour
-		void FixedUpdate()
+		protected virtual void FixedUpdate()
 		{
 			var p = phase;
 			switch (p)
@@ -335,7 +335,7 @@ namespace Ghost
 			}
 		}
 
-		void OnDestroy()
+		protected virtual void OnDestroy()
 		{
 			tcp.Close();
 			asyncReceive.EndWork();
