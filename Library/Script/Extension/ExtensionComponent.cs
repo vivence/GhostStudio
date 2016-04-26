@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Ghost.Extension
 {
-	public static class S_Component
+	public static class ExtensionComponent
 	{
 		public static T FindComponentInChildren<T>(this Component root) where T:Component
 		{

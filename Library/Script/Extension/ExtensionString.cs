@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Ghost.Extension
 {
-	public static class S_String
+	public static class ExtensionString
 	{
 		public static string[] PickUpDigits(this string str)
 		{

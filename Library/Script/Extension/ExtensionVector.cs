@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Ghost.Extension
 {
-	public static class S_Vector
+	public static class ExtensionVector
 	{
 		#region vector2
 		public static Vector2 Multiply(this Vector2 p, Vector2 other)

@@ -8,7 +8,7 @@ namespace System
 
 namespace Ghost.Extension
 {
-	public static class S_System
+	public static class ExtensionSystem
 	{
 		
 	}

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Ghost.Extension
 {
-	public static class S_Collection
+	public static class ExtensionCollection
 	{
 		#region array
 		public static string ToStringWithSeparator<T>(this T[] array, object separator)

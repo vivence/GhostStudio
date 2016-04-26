@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace Ghost.Async
 {
-	public class ThreadProc
+	public class ThreadPoolProc
 	{
 		public bool running{get;private set;}
 		public System.Exception exception{get;private set;}
@@ -83,7 +83,7 @@ namespace Ghost.Async
 
 		private static void BkgProc(object param)
 		{
-			var self = param as ThreadProc;
+			var self = param as ThreadPoolProc;
 			try
 			{
 				self.BkgRun();

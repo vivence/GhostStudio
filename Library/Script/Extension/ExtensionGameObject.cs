@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Ghost.Extension
 {
-	public static class S_GameObject
+	public static class ExtensionGameObject
 	{
 		public static void FindGameObjectsInChildren(this GameObject obj, System.Predicate<GameObject> pred, ref List<GameObject> list)
 		{

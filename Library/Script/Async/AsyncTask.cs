@@ -29,7 +29,7 @@ namespace Ghost.Async
 		}
 
 		private System.Func<object, object> bkgProc = null;
-		private ThreadProc worker = new ThreadProc();
+		private ThreadPoolProc worker = new ThreadPoolProc();
 
 		public void Post()
 		{
