@@ -8,37 +8,15 @@ namespace Ghost.Async
 {
 	public abstract class ProducerConsumerBase
 	{
-		protected class ProductContainer : IReuseableObject
-		{
-			public List<object> products{get;private set;}
-
-			public ProductContainer()
-			{
-				products = new List<object>();
-			}
-
-			#region IReuseableObject
-			public void Construct(params object[] args)
-			{
-
-			}
-			public void Destruct()
-			{
-				products.Clear();
-			}
-			public bool reused{get;set;}
-			#endregion IReuseableObject
-		}
-
 		protected class Context
 		{
 			public bool closed{get; private set;}
-			private ProductContainer productContainer;
+			private ReuseableList<object> productContainer;
 
 			public Context()
 			{
 				closed = false;
-				productContainer = ObjectPool<ProductContainer>.Singleton.Create();
+				productContainer = ObjectPool<ReuseableList<object>>.Singleton.Create();
 			}
 
 			#region virtual
@@ -51,27 +29,27 @@ namespace Ghost.Async
 			[MethodImpl(MethodImplOptions.Synchronized)]
 			public void PostProduct(object p)
 			{
-				productContainer.products.Add(p);
+				productContainer.list.Add(p);
 			}
 
 			[MethodImpl(MethodImplOptions.Synchronized)]
-			public ProductContainer GetProductContainer()
+			public ReuseableList<object> GetProductContainer()
 			{
-				if (0 >= productContainer.products.Count)
+				if (0 >= productContainer.list.Count)
 				{
 					return null;
 				}
 				var ret = productContainer;
-				productContainer = ObjectPool<ProductContainer>.Singleton.Create();
+				productContainer = ObjectPool<ReuseableList<object>>.Singleton.Create();
 				return ret;
 			}
 
 			[MethodImpl(MethodImplOptions.Synchronized)]
-			public void ReuseProductContainer(ProductContainer p)
+			public void ReuseProductContainer(ReuseableList<object> p)
 			{
 				if (p != productContainer)
 				{
-					ObjectPool<ProductContainer>.Singleton.Destroy(p);
+					ObjectPool<ReuseableList<object>>.Singleton.Destroy(p);
 				}
 			}
 		}

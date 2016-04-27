@@ -96,9 +96,9 @@ namespace Ghost.Async
 					var p = context.GetProductContainer();
 					if (null != p)
 					{
-						for (int i = 0; i < p.products.Count; ++i)
+						for (int i = 0; i < p.list.Count; ++i)
 						{
-							context.bkgProc(p.products[i]);
+							context.bkgProc(p.list[i]);
 						}
 						context.ReuseProductContainer(p);
 					}

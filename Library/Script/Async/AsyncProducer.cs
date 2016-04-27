@@ -57,9 +57,9 @@ namespace Ghost.Async
 			{
 				return false;
 			}
-			for (int i = 0; i < p.products.Count; ++i)
+			for (int i = 0; i < p.list.Count; ++i)
 			{
-				consumer(p.products[i]);
+				consumer(p.list[i]);
 			}
 			context.ReuseProductContainer(p);
 			return true;

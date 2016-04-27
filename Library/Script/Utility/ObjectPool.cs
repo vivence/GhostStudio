@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
+using Ghost.Extension;
 
 namespace Ghost.Utility
 {
@@ -9,6 +11,27 @@ namespace Ghost.Utility
 		void Construct(params object[] args);
 		void Destruct();
 		bool reused{get;set;}
+	}
+
+	public class ReuseableList<T> : IReuseableObject
+	{
+		public List<T> list{get;private set;}
+
+		public ReuseableList()
+		{
+			list = new List<T>();
+		}
+
+		#region IReuseableObject
+		public void Construct(params object[] args)
+		{
+		}
+		public void Destruct()
+		{
+			list.Clear();
+		}
+		public bool reused{get;set;}
+		#endregion IReuseableObject
 	}
 
 	public class ObjectPool<T> where T:IReuseableObject, new()
