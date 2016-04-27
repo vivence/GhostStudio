@@ -19,6 +19,7 @@ namespace Ghost.EditorTool
 			tcp.receiveTimeout = EditorGUILayout.IntField("Receive Timeout", tcp.receiveTimeout);
 			tcp.sendBufferSize = EditorGUILayout.IntField("Send Buffer Size", tcp.sendBufferSize);
 			tcp.receiveBufferSize = EditorGUILayout.IntField("Receive Buffer Size", tcp.receiveBufferSize);
+			tcp.blocking = EditorGUILayout.ToggleLeft("Blocking", tcp.blocking);
 			EditorGUI.EndDisabledGroup();
 
 			EditorGUI.BeginDisabledGroup(false);

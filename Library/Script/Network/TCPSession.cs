@@ -177,6 +177,7 @@ namespace Ghost
 		public int receiveTimeout;
 		public int sendBufferSize;
 		public int receiveBufferSize;
+		public bool blocking = true;
 
 		public bool Connect()
 		{
@@ -197,6 +198,7 @@ namespace Ghost
 			tcp.ReceiveTimeout = receiveTimeout;
 			tcp.SendBufferSize = sendBufferSize;
 			tcp.ReceiveBufferSize = receiveBufferSize;
+			tcp.Client.Blocking = blocking;
 
 			if (!asyncOperate.working)
 			{

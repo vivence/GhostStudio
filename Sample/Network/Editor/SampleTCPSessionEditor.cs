@@ -6,7 +6,7 @@ using Ghost.Sample;
 namespace Ghost.EditorTool
 {
 	[CustomEditor(typeof(SampleTCPSession))]
-	public class E_SampleTCPSession : Editor
+	public class E_SampleTCPSession : E_TCPSession
 	{
 		public override void OnInspectorGUI ()
 		{
