@@ -11,12 +11,15 @@ namespace Ghost.Async
 		protected class Context
 		{
 			public bool closed{get; private set;}
+
 			private ReuseableList<object> productContainer;
+			private ObjectPool<ReuseableList<object>> containerPool;
 
 			public Context()
 			{
 				closed = false;
-				productContainer = ObjectPool<ReuseableList<object>>.Singleton.Create();
+				containerPool = new ObjectPool<ReuseableList<object>>();
+				productContainer = containerPool.Create();
 			}
 
 			#region virtual
@@ -40,7 +43,7 @@ namespace Ghost.Async
 					return null;
 				}
 				var ret = productContainer;
-				productContainer = ObjectPool<ReuseableList<object>>.Singleton.Create();
+				productContainer = containerPool.Create();
 				return ret;
 			}
 
@@ -49,7 +52,7 @@ namespace Ghost.Async
 			{
 				if (p != productContainer)
 				{
-					ObjectPool<ReuseableList<object>>.Singleton.Destroy(p);
+					containerPool.Destroy(p);
 				}
 			}
 		}

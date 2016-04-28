@@ -17,6 +17,7 @@ namespace Ghost.Sample
 		private Phase prevPhase = Phase.None;
 
 		#region sync
+		private ObjectPool<ReuseableList<int>> listPool;
 		private ReuseableList<int> sendedIDs;
 
 		[MethodImpl(MethodImplOptions.Synchronized)]
@@ -33,7 +34,7 @@ namespace Ghost.Sample
 				return null;
 			}
 			var ret = sendedIDs;
-			sendedIDs = ObjectPool<ReuseableList<int>>.Singleton.Create();
+			sendedIDs = listPool.Create();
 			return ret;
 		}
 
@@ -42,7 +43,7 @@ namespace Ghost.Sample
 		{
 			if (p != sendedIDs)
 			{
-				ObjectPool<ReuseableList<int>>.Singleton.Destroy(p);
+				listPool.Destroy(p);
 			}
 		}
 		#endregion sync
@@ -98,7 +99,8 @@ namespace Ghost.Sample
 		#region behaviour
 		protected virtual void Awake()
 		{
-			sendedIDs = ObjectPool<ReuseableList<int>>.Singleton.Create();
+			listPool = new ObjectPool<ReuseableList<int>>();
+			sendedIDs = listPool.Create();
 		}
 
 		protected override void FixedUpdate ()

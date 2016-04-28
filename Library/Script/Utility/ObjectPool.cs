@@ -39,10 +39,6 @@ namespace Ghost.Utility
 		public static readonly ObjectPool<T> Singleton = new ObjectPool<T>();
 
 		private Stack<T> pool = new Stack<T>();
-	
-		private ObjectPool()
-		{
-		}
 
 		public T Create(params object[] args)
 		{
