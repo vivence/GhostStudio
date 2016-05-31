@@ -220,17 +220,17 @@ namespace Ghost
 			return true;
 		}
 
-		public bool Send(uint id1, uint id2, byte[] data)
+		public bool Send(params object[] args)
 		{
 			if (!AllowSend())
 			{
 				return false;
 			}
-			if (data.IsNullOrEmpty())
+			if (args.IsNullOrEmpty())
 			{
 				return false;
 			}
-			asyncOperate.PostProduct(OperateData.Create(Operate.Send, id1, id2, data));
+			asyncOperate.PostProduct(OperateData.Create(Operate.Send, args));
 			return true;
 		}
 

@@ -52,7 +52,6 @@ namespace Ghost.Test
 			lineRenderer.SetVertexCount(pCount);
 
 			var progressPart = 1f / pCount;
-			var progress = 0f;
 
 			var lastIndex = pCount-1;
 			for (int i = 0; i < lastIndex; ++i)
