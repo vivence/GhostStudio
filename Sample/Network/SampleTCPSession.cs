@@ -14,7 +14,7 @@ namespace Ghost.Sample
 		private byte[] buffer = new byte[1024];
 		private MemoryStream stream = new MemoryStream();
 
-		private Phase prevPhase = Phase.None;
+		private TCPSessionInfo.Phase prevPhase = TCPSessionInfo.Phase.None;
 
 		#region sync
 		private ObjectPool<ReuseableList<int>> listPool;
@@ -116,16 +116,17 @@ namespace Ghost.Sample
 				ReuseSendIDs(p);
 			}
 
-			if (prevPhase != phase)
+			var curPhase = info.phase;
+			if (prevPhase != curPhase)
 			{
-				Debug.LogFormat("<color=green>Phase Changed: </color>\n{0} -> {1}", prevPhase, phase);
-				var e = exception;
+				Debug.LogFormat("<color=green>Phase Changed: </color>\n{0} -> {1}", prevPhase, curPhase);
+				var e = info.exception;
 				if (null != e)
 				{
 					Debug.LogFormat("<color=green>Exception: </color>\n{0}", e);
 				}
 
-				prevPhase = phase;
+				prevPhase = curPhase;
 			}
 		}
 		#endregion behaviour

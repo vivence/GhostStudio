@@ -15,8 +15,9 @@ namespace Ghost.EditorTool
 			if (Application.isPlaying)
 			{
 				var session = target as TCPSession;
+				var info = session.info;
 
-				if (TCPSession.Phase.Connected == session.phase)
+				if (TCPSessionInfo.Phase.Connected == info.phase)
 				{
 					EditorGUILayout.Separator();
 

@@ -7,240 +7,32 @@ namespace Ghost
 {
 	public abstract class TCPSession : MonoBehaviour 
 	{
-		public enum Phase
+		[SerializeField]
+		protected TCPSessionInfo info_ = new TCPSessionInfo(new TcpClient());
+		public TCPSessionInfo info
 		{
-			None,
-			ConnectPost,
-			Connected,
-			ClosePost,
-			Closed,
-			Exception
-		}
-
-		public enum Operate
-		{
-			Connect,
-			Disconnect,
-			Send,
-		}
-		public struct OperateData
-		{
-			public Operate opt;
-			public object[] args;
-
-			public OperateData(Operate o, object[] a = null)
+			get
 			{
-				opt = o;
-				args = a;
-			}
-
-			public static OperateData Create(Operate opt, params object[] args)
-			{
-				return new OperateData(opt, args);
+				return info_;
 			}
 		}
 
 		private Async.Producer asyncReceive = new Async.Producer();
 		private Async.Consumer asyncOperate = new Async.Consumer();
 
-		private TcpClient tcp = null;
-		public bool SetTCPClient(TcpClient client)
-		{
-			if (null != tcp)
-			{
-				return false;
-			}
-			tcp = client;
-			return true;
-		}
-
-		#region sync
-		public Phase phase
-		{
-			get
-			{
-				return syncInfo.GetPhase();
-			}
-			set
-			{
-				syncInfo.SetPhase(value);
-			}
-		}
-		public System.Exception exception
-		{
-			get
-			{
-				return syncInfo.GetException();
-			}
-			set
-			{
-				syncInfo.SetException(value);
-			}
-		}
-		[System.Runtime.Remoting.Contexts.SynchronizationAttribute]
-		public class SyncInfo : System.ContextBoundObject
-		{
-			private System.Exception excetion = null;
-			private Phase phase = Phase.None;
-
-			public System.Exception GetException()
-			{
-				return excetion;
-			}
-			public void SetException(System.Exception e)
-			{
-				if (null != e)
-				{
-					if (null == excetion)
-					{
-						excetion = e;
-						phase = Phase.Exception;
-					}
-				}
-				else
-				{
-					excetion = null;
-					phase = Phase.None;
-				}
-			}
-
-			public Phase GetPhase()
-			{
-				return phase;
-			}
-			public void SetPhase(Phase p)
-			{
-				phase = p;
-			}
-		}
-		private SyncInfo syncInfo = new SyncInfo();
-
-		public bool AllowConnect()
-		{
-			var p = phase;
-			switch (p)
-			{
-			case Phase.None:
-				return true;
-			}
-			return false;
-		}
-		public bool AllowDoConnect()
-		{
-			var p = phase;
-			switch (p)
-			{
-			case Phase.ConnectPost:
-				return true;
-			}
-			return false;
-		}
-
-		public bool AllowDisconnect()
-		{
-			var p = phase;
-			switch (p)
-			{
-			case Phase.Connected:
-				return true;
-			}
-			return false;
-		}
-		public bool AllowDoDisconnect()
-		{
-			var p = phase;
-			switch (p)
-			{
-			case Phase.ClosePost:
-				return true;
-			}
-			return false;
-		}
-
-		public bool AllowSend()
-		{
-			var p = phase;
-			switch (p)
-			{
-			case Phase.Connected:
-				return true;
-			}
-			return false;
-		}
-
-		public bool AllowReceive()
-		{
-			var p = phase;
-			switch (p)
-			{
-			case Phase.Connected:
-				return true;
-			}
-			return false;
-		}
-		#endregion sync
-
-		public string host;
-		public int port;
-		public int sendTimeout;
-		public int receiveTimeout;
-		public int sendBufferSize;
-		public int receiveBufferSize;
-		public bool blocking = true;
-
 		public bool Connect()
 		{
-			if (!AllowConnect())
-			{
-				return false;
-			}
-			if (string.IsNullOrEmpty(host))
-			{
-				return false;
-			}
-			if (0 >= port)
-			{
-				return false;
-			}
-
-			tcp.SendTimeout = sendTimeout;
-			tcp.ReceiveTimeout = receiveTimeout;
-			tcp.SendBufferSize = sendBufferSize;
-			tcp.ReceiveBufferSize = receiveBufferSize;
-			tcp.Client.Blocking = blocking;
-
-			if (!asyncOperate.working)
-			{
-				asyncOperate.StartWork(BkgOperate);
-			}
-			phase = Phase.ConnectPost;
-			asyncOperate.PostProduct(OperateData.Create(Operate.Connect, host, port));
-			return true;
+			return info.Connect(asyncOperate);
 		}
 
 		public bool Disconnect()
 		{
-			if (!AllowDisconnect())
-			{
-				return false;
-			}
-			phase = Phase.ClosePost;
-			asyncOperate.PostProduct(OperateData.Create(Operate.Disconnect));
-			return true;
+			return info.Disconnect(asyncOperate);
 		}
 
 		public bool Send(params object[] args)
 		{
-			if (!AllowSend())
-			{
-				return false;
-			}
-			if (args.IsNullOrEmpty())
-			{
-				return false;
-			}
-			asyncOperate.PostProduct(OperateData.Create(Operate.Send, args));
-			return true;
+			return info.Send(asyncOperate, args);
 		}
 
 		#region background
@@ -252,64 +44,12 @@ namespace Ghost
 
 		private void BkgOperate(object arg)
 		{
-			var optData = (OperateData)arg;
-			try
-			{
-				switch (optData.opt)
-				{
-				case Operate.Connect:
-					if (AllowDoConnect())
-					{
-						var host = (string)optData.args[0];
-						var port = (int)optData.args[1];
-						tcp.Client.Connect(host, port);
-						phase = Phase.Connected;
-					}
-					break;
-				case Operate.Disconnect:
-					if (AllowDoDisconnect())
-					{
-						tcp.Client.Disconnect(true);
-						phase = Phase.Closed;
-					}
-					break;
-				case Operate.Send:
-					if (AllowSend())
-					{
-						DoBkgSend(tcp.Client, optData.args);
-					}
-					break;
-				}
-			}
-			catch (System.Exception e)
-			{
-				exception = e;
-			}
+			info.BkgOperate((TCPSessionInfo.OperateData)arg);
 		}
 
 		private object BkgReceive()
 		{
-			if (AllowReceive())
-			{
-				try
-				{
-					return DoBkgReceive(tcp.Client);
-				}
-				catch (System.Exception e)
-				{
-					exception = e;
-				}
-			}
-			return null;
-		}
-		private static void BkgLoopReceive(Socket socket, byte[] buffer, int offset, int size)
-		{
-			while (0 < size)
-			{
-				var ret = socket.Receive(buffer, offset, size, SocketFlags.None);
-				offset += ret;
-				size -= ret;
-			}
+			return info.BkgReceive();
 		}
 		#endregion background
 
@@ -320,28 +60,28 @@ namespace Ghost
 		#region behaviour
 		protected virtual void Start()
 		{
-			if (null == tcp)
-			{
-				tcp = new TcpClient();
-			}
+			info.DoBkgSend = DoBkgSend;
+			info.DoBkgReceive = DoBkgReceive;
+
+			asyncOperate.StartWork(BkgOperate);
 		}
 
 		protected virtual void FixedUpdate()
 		{
-			var p = phase;
+			var p = info.phase;
 			switch (p)
 			{
-			case Phase.Closed:
+			case TCPSessionInfo.Phase.Closed:
 				GameObject.Destroy(gameObject);
 				break;
-			case Phase.Exception:
+			case TCPSessionInfo.Phase.Exception:
 				asyncReceive.EndWork();
 				asyncOperate.EndWork();
 				break;
-			case Phase.ClosePost:
+			case TCPSessionInfo.Phase.ClosePost:
 				asyncReceive.EndWork();
 				break;
-			case Phase.Connected:
+			case TCPSessionInfo.Phase.Connected:
 				if (!asyncReceive.working)
 				{
 					asyncReceive.StartWork(BkgReceive);
@@ -356,7 +96,7 @@ namespace Ghost
 
 		protected virtual void OnDestroy()
 		{
-			tcp.Close();
+			info.Dispose();
 			asyncReceive.EndWork();
 			asyncOperate.EndWork();
 		}

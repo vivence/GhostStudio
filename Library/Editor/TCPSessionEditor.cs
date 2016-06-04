@@ -11,32 +11,27 @@ namespace Ghost.EditorTool
 		public override void OnInspectorGUI ()
 		{
 			var tcp = target as TCPSession;
+			var info = tcp.info;
 
-			EditorGUI.BeginDisabledGroup(!tcp.AllowConnect());
-			tcp.host = EditorGUILayout.TextField("Host", tcp.host);
-			tcp.port = EditorGUILayout.IntField("Port", tcp.port);
-			tcp.sendTimeout = EditorGUILayout.IntField("Send Timeout", tcp.sendTimeout);
-			tcp.receiveTimeout = EditorGUILayout.IntField("Receive Timeout", tcp.receiveTimeout);
-			tcp.sendBufferSize = EditorGUILayout.IntField("Send Buffer Size", tcp.sendBufferSize);
-			tcp.receiveBufferSize = EditorGUILayout.IntField("Receive Buffer Size", tcp.receiveBufferSize);
-			tcp.blocking = EditorGUILayout.ToggleLeft("Blocking", tcp.blocking);
+			EditorGUI.BeginDisabledGroup(!info.AllowConnect());
+			base.OnInspectorGUI();
 			EditorGUI.EndDisabledGroup();
 
 			EditorGUI.BeginDisabledGroup(false);
-			EditorGUILayout.EnumPopup("Phase", tcp.phase);
+			EditorGUILayout.EnumPopup("Phase", info.phase);
 			EditorGUI.EndDisabledGroup();
 
 			if (Application.isPlaying)
 			{
 				EditorGUILayout.Separator();
-				if (tcp.AllowConnect())
+				if (info.AllowConnect())
 				{
 					if (GUILayout.Button("Connect"))
 					{
 						tcp.Connect();
 					}
 				}
-				else if (tcp.AllowDisconnect())
+				else if (info.AllowDisconnect())
 				{
 					if (GUILayout.Button("Disconnect"))
 					{
@@ -44,7 +39,7 @@ namespace Ghost.EditorTool
 					}
 				}
 
-				var exception = tcp.exception;
+				var exception = info.exception;
 				if (null != exception)
 				{
 					EditorGUILayout.Separator();

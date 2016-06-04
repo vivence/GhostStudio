@@ -48,10 +48,6 @@ namespace Ghost.Extension
 		{
 			return null == collection || 0 >= collection.Count;
 		}
-		public static bool IsNullOrEmpty<T>(this ICollection<T> collection)
-		{
-			return null == collection || 0 >= collection.Count;
-		}
 		#endregion ICollection
 
 		#region IEnumerable
