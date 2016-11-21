@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Ghost.Extension;
@@ -11,6 +12,8 @@ namespace Ghost.Utility
 		void Construct(params object[] args);
 		void Destruct();
 		bool reused{get;set;}
+
+		void Destroy();
 	}
 
 	public class ReuseableList<T> : IReuseableObject
@@ -28,13 +31,27 @@ namespace Ghost.Utility
 		}
 		public void Destruct()
 		{
+			for (int i = 0;i < list.Count; ++i)
+			{
+				var obj = list[i];
+				var dispose = obj as IDisposable;
+				if (null != dispose)
+				{
+					dispose.Dispose();
+				}
+			}
 			list.Clear();
 		}
 		public bool reused{get;set;}
+
+		public void Destroy()
+		{
+			Destruct();
+		}
 		#endregion IReuseableObject
 	}
 
-	public class ObjectPool<T> where T:IReuseableObject, new()
+	public class ObjectPool<T> : IDisposable where T:IReuseableObject, new()
 	{
 		public static readonly ObjectPool<T> Singleton = new ObjectPool<T>();
 
@@ -68,6 +85,23 @@ namespace Ghost.Utility
 			obj.Destruct();
 			obj.reused = false;
 		}
+
+		public void Clear(int restCount = 0)
+		{
+			var destroyCount = pool.Count-restCount;
+			for (int i = 0; i < destroyCount; ++i)
+			{
+				var obj = pool.Pop();
+				obj.Destroy();
+			}
+		}
+
+		#region IDisposable
+		public void Dispose() 
+		{
+			Clear(0);
+		}
+		#endregion IDisposable
 
 	}
 } // namespace Ghost.Utility

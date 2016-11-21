@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System;
 using Ghost.Extension;
+using Ghost.Utility;
 
 namespace Ghost
 {
 	[System.Serializable]
-	public class TCPSessionInfo : IDisposable
+	public class TCPSessionInfo : IDisposable, Async.IProductOwner
 	{
 		public enum Phase
 		{
@@ -25,36 +26,69 @@ namespace Ghost
 			Disconnect,
 			Send,
 		}
-		public struct OperateData
+		public class OperateData : Async.ProductBase<TCPSessionInfo, Operate>
 		{
-			public TCPSessionInfo session;
-			public Operate opt;
-			public object[] args;
+		}
+		private ObjectPool<OperateData> optDataPool = new ObjectPool<OperateData>();
 
-			public OperateData(TCPSessionInfo s, Operate o, object[] a = null)
+		#region IProductOwner
+		public void DestroyProduct(IDisposable p)
+		{
+			var optData = p as OperateData;
+			#if DEBUG
+			Debug.Assert(null != optData);
+			#endif // DEBUG
+			if (null != optDataPool)
 			{
-				session = s;
-				opt = o;
-				args = a;
+				optDataPool.Destroy(optData);
 			}
-
-			public static OperateData Create(TCPSessionInfo s, Operate opt, params object[] args)
+			else
 			{
-				return new OperateData(s, opt, args);
+				optData.Destroy();
 			}
 		}
+		#endregion IProductOwner
 
-		public static void LoopReceive(Socket socket, byte[] buffer, int offset, int size)
+		#region helper
+		public static void LoopSend(
+			Socket socket, 
+			byte[] data, 
+			int offset, 
+			int size, 
+			SocketFlags flags = SocketFlags.None)
 		{
 			while (0 < size)
 			{
-				var ret = socket.Receive(buffer, offset, size, SocketFlags.None);
+				var ret = socket.Send(data, offset, size, flags);
+				if (0 >= ret)
+				{
+					throw new System.IO.IOException(string.Format("Send return {0}", ret));
+				}
 				offset += ret;
 				size -= ret;
 			}
 		}
+		public static void LoopReceive(
+			Socket socket, 
+			byte[] buffer, 
+			int offset, 
+			int size, 
+			SocketFlags flags = SocketFlags.None)
+		{
+			while (0 < size)
+			{
+				var ret = socket.Receive(buffer, offset, size, flags);
+				if (0 >= ret)
+				{
+					throw new System.IO.IOException(string.Format("Receive return {0}", ret));
+				}
+				offset += ret;
+				size -= ret;
+			}
+		}
+		#endregion helper
 
-		private TcpClient tcp = null;
+		public TcpClient tcp{get;private set;}
 
 		#region sync
 		public Phase phase
@@ -183,13 +217,23 @@ namespace Ghost
 		#endregion sync
 
 		[System.Serializable]
-		public class Setting
+		public class Setting : ICloneable
 		{
 			public int sendTimeout = 0;
 			public int receiveTimeout = 0;
 			public int sendBufferSize = 0;
 			public int receiveBufferSize = 0;
 			public bool blocking = true;
+
+			public object Clone()
+			{
+				return MemberwiseClone();
+			}
+
+			public Setting CloneSelf()
+			{
+				return Clone() as Setting;
+			}
 		}
 		public string host;
 		public int port;
@@ -224,11 +268,15 @@ namespace Ghost
 			TCPSetting();
 		}
 
+		#region IDispose
 		public void Dispose()
 		{
+			optDataPool.Dispose();
+			optDataPool = null;
 			tcp.Close();
 			phase = Phase.None;
 		}
+		#endregion IDispose
 
 		public bool Connect(Async.Consumer asyncOperate)
 		{
@@ -248,7 +296,8 @@ namespace Ghost
 			TCPSetting();
 
 			phase = Phase.ConnectPost;
-			asyncOperate.PostProduct(OperateData.Create(this, Operate.Connect, host, port));
+
+			asyncOperate.PostProduct(optDataPool.Create(this, Operate.Connect, host, port));
 			return true;
 		}
 
@@ -259,7 +308,7 @@ namespace Ghost
 				return false;
 			}
 			phase = Phase.ClosePost;
-			asyncOperate.PostProduct(OperateData.Create(this, Operate.Disconnect));
+			asyncOperate.PostProduct(optDataPool.Create(this, Operate.Disconnect));
 			return true;
 		}
 
@@ -273,7 +322,7 @@ namespace Ghost
 			{
 				return false;
 			}
-			asyncOperate.PostProduct(OperateData.Create(this, Operate.Send, args));
+			asyncOperate.PostProduct(optDataPool.Create(this, Operate.Send, args));
 			return true;
 		}
 
@@ -281,39 +330,70 @@ namespace Ghost
 		public System.Action<Socket, object[]> DoBkgSend;
 		public System.Func<Socket, object> DoBkgReceive;
 
+		public bool BkgConnect(OperateData optData)
+		{
+			#if DEBUG
+			Debug.Assert(this == optData.owner);
+			#endif // DEBUG
+			if (!AllowDoConnect())
+			{
+				return false;
+			}
+			var host = (string)optData.args[0];
+			var port = (int)optData.args[1];
+			tcp.Client.Connect(host, port);
+			phase = Phase.Connected;
+			return true;
+		}
+
+		public bool BkgDisconnect(OperateData optData)
+		{
+			#if DEBUG
+			Debug.Assert(this == optData.owner);
+			#endif // DEBUG
+			if (!AllowDoDisconnect())
+			{
+				return false;
+			}
+			tcp.Client.Disconnect(true);
+			phase = Phase.Closed;
+			return true;
+		}
+
+		public bool BkgSend(OperateData optData)
+		{
+			#if DEBUG
+			Debug.Assert(this == optData.owner);
+			#endif // DEBUG
+			if (!AllowSend())
+			{
+				return false;
+			}
+
+			#if DEBUG
+			Debug.Assert(null != DoBkgSend);
+			#endif // DEBUG
+			DoBkgSend(tcp.Client, optData.args);
+			return true;
+		}
+
 		public void BkgOperate(OperateData optData)
 		{
 			#if DEBUG
-			Debug.Assert(this == optData.session);
+			Debug.Assert(this == optData.owner);
 			#endif // DEBUG
 			try
 			{
 				switch (optData.opt)
 				{
 				case Operate.Connect:
-					if (AllowDoConnect())
-					{
-						var host = (string)optData.args[0];
-						var port = (int)optData.args[1];
-						tcp.Client.Connect(host, port);
-						phase = Phase.Connected;
-					}
+					BkgConnect(optData);
 					break;
 				case Operate.Disconnect:
-					if (AllowDoDisconnect())
-					{
-						tcp.Client.Disconnect(true);
-						phase = Phase.Closed;
-					}
+					BkgDisconnect(optData);
 					break;
 				case Operate.Send:
-					if (AllowSend())
-					{
-						#if DEBUG
-						Debug.Assert(null != DoBkgSend);
-						#endif // DEBUG
-						DoBkgSend(tcp.Client, optData.args);
-					}
+					BkgSend(optData);
 					break;
 				}
 			}

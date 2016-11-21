@@ -77,13 +77,13 @@ namespace Ghost.Async
 		#region background
 		private static void BkgProc(object param)
 		{
+			var context = param as ProductContext;
+			if (null == context)
+			{
+				return;
+			}
 			try
 			{
-				var context = param as ProductContext;
-				if (null == context)
-				{
-					return;
-				}
 				while (!context.closed)
 				{
 					var p = context.bkgProc();
@@ -95,6 +95,10 @@ namespace Ghost.Async
 			}
 			catch (ThreadInterruptedException)
 			{
+			}
+			finally
+			{
+				context.Dispose();
 			}
 		}
 		#endregion background

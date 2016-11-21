@@ -64,7 +64,7 @@ namespace Ghost
 		private void BkgOperate(object arg)
 		{
 			var optData = (TCPSessionInfo.OperateData)arg;
-			optData.session.BkgOperate(optData);
+			optData.owner.BkgOperate(optData);
 		}
 
 		private object BkgReceive()

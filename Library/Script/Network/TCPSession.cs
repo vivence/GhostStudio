@@ -44,7 +44,7 @@ namespace Ghost
 
 		private void BkgOperate(object arg)
 		{
-			info.BkgOperate((TCPSessionInfo.OperateData)arg);
+			info.BkgOperate(arg as TCPSessionInfo.OperateData);
 		}
 
 		private object BkgReceive()

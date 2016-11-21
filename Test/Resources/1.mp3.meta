@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: a25a17e6fdb4a4655b2efb81b11e1e03
+timeCreated: 1465807610
+licenseType: Pro
+AudioImporter:
+  serializedVersion: 6
+  defaultSettings:
+    loadType: 1
+    sampleRateSetting: 2
+    sampleRateOverride: 22050
+    compressionFormat: 1
+    quality: 0.47
+    conversionMode: 0
+  platformSettingOverrides: {}
+  forceToMono: 1
+  normalize: 1
+  preloadAudioData: 1
+  loadInBackground: 0
+  3D: 1
+  userData: 
+  assetBundleName: test_1
+  assetBundleVariant: 

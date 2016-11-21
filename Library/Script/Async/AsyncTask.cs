@@ -71,6 +71,11 @@ namespace Ghost.Async
 			Cancel();
 		}
 		public bool reused{get;set;}
+
+		public void Destroy()
+		{
+			Destruct();
+		}
 		#endregion IReuseable
 	}
 } // namespace Ghost.Async

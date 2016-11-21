@@ -1,11 +1,77 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Ghost.Extension;
 using Ghost.Utility;
 
 namespace Ghost.Async
 {
+	public interface IProductOwner
+	{
+		void DestroyProduct(IDisposable p);
+	}
+
+	public class ProductBase<_Owner, _Opt> : IReuseableObject, IDisposable 
+		where _Owner:IProductOwner
+	{
+		public _Owner owner;
+		public _Opt opt;
+		public object[] args;
+
+		#region IReuseableObject
+		public void Construct(params object[] a)
+		{
+			#if DEBUG
+			Debug.Assert(null != args && 2 <= args.Length);
+			#endif // DEBUG
+
+			owner = (_Owner)a[0];
+			opt = (_Opt)a[1];
+			if (2 < a.Length)
+			{
+				args  = new object[a.Length-2];
+				for (int i = 0; i < args.Length; ++i)
+				{
+					args[i] = a[i+2];
+				}
+			}
+			else
+			{
+				args = null;
+			}
+		}
+		public void Destruct()
+		{
+			if (!args.IsNullOrEmpty())
+			{
+				for (int i = 0; i < args.Length; ++i)
+				{
+					var obj = args[i];
+					var dispose = obj as System.IDisposable;
+					if (null != dispose)
+					{
+						dispose.Dispose();
+					}
+				}
+				args = null;
+			}
+		}
+		public bool reused{get;set;}
+
+		public void Destroy()
+		{
+			Destruct();
+		}
+		#endregion IReuseableObject
+
+		public void Dispose()
+		{
+			owner.DestroyProduct(this);
+		}
+	}
+
 	public sealed class Consumer : ProducerConsumerBase
 	{
 		class ConsumerContext : Context
@@ -84,13 +150,13 @@ namespace Ghost.Async
 		#region background
 		private static void BkgProc(object param)
 		{
+			var context = param as ConsumerContext;
+			if (null == context)
+			{
+				return;
+			}
 			try
 			{
-				var context = param as ConsumerContext;
-				if (null == context)
-				{
-					return;
-				}
 				while (!context.closed)
 				{
 					var p = context.GetProductContainer();
@@ -111,6 +177,10 @@ namespace Ghost.Async
 			catch (ThreadInterruptedException)
 			{
 
+			}
+			finally
+			{
+				context.Dispose();
 			}
 		}
 		#endregion background

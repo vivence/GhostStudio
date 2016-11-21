@@ -8,7 +8,7 @@ namespace Ghost.Async
 {
 	public abstract class ProducerConsumerBase
 	{
-		protected class Context
+		protected class Context : System.IDisposable
 		{
 			public bool closed{get; private set;}
 
@@ -28,6 +28,14 @@ namespace Ghost.Async
 				closed = true;
 			}
 			#endregion virtual
+
+			#region IDisposable
+			public void Dispose() 
+			{
+				containerPool.Destroy(productContainer);
+				containerPool.Dispose();
+			}
+			#endregion IDisposable
 
 			[MethodImpl(MethodImplOptions.Synchronized)]
 			public void PostProduct(object p)
