@@ -69,7 +69,7 @@ namespace Ghost.Utility
 				obj = pool.Pop();
 			}
 
-			obj.Construct(obj);
+			obj.Construct(args);
 			obj.reused = true;
 			return obj;
 		}

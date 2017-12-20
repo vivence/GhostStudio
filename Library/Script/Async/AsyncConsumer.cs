@@ -24,7 +24,7 @@ namespace Ghost.Async
 		public void Construct(params object[] a)
 		{
 			#if DEBUG
-			Debug.Assert(null != args && 2 <= args.Length);
+			Debug.Assert(null != a && 2 <= a.Length);
 			#endif // DEBUG
 
 			owner = (_Owner)a[0];
